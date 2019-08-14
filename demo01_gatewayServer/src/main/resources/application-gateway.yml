@@ -1,0 +1,19 @@
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: DEMO01_SSO
+          uri: http://localhost:10000
+          predicates:
+            - Path=/sso/demo01Sso/**
+            - Cookie=authcode, (.*)
+          filters:
+            - StripPrefix=2
+        - id: DEMO01_Manage
+          uri: http://localhost:10001
+          predicates:
+            - Path=/manage/demo01Manage/**
+            - Cookie=authcode, (.*)
+          filters:
+            - StripPrefix=2
+
