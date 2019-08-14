@@ -1,22 +1,13 @@
 package com.caogang.filter;
 
-import com.alibaba.fastjson.JSONObject;
-import com.caogang.utils.JWTUtils;
-import io.jsonwebtoken.JwtException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * @author: xiaogang
@@ -37,64 +28,63 @@ public class myGatewayFilter implements GlobalFilter {
 
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 
-        ServerHttpRequest request = exchange.getRequest();
+//        ServerHttpRequest request = exchange.getRequest();
+//
+//        ServerHttpResponse response = exchange.getResponse();
+//
+//        //请求的绝对路径
+//        String uri0=request.getURI().toString();
+//
+//        //请求的相对路径
+//        String uri = request.getPath().value();
+//
+//        System.out.println("*******"+uri+"*******");
+//
+//        List<String> strings = Arrays.asList(urls);
+//
+//        if(strings.contains(uri0)){
+//
+//            return chain.filter(exchange);
+//
+//        }else{
+//
+//            List<String> tokens = request.getHeaders().get("token");
+//
+//            JSONObject jsonObject = null;
+//
+//            try {
+//
+//                jsonObject = JWTUtils.decodeJwtTocken(tokens.get(0));
+//
+//                String token = JWTUtils.generateToken(jsonObject.toJSONString());
+//
+//                response.getHeaders().set("token",token);
+//
+//            } catch (JwtException e) {
+//
+//                e.printStackTrace();
+//
+//                response.getHeaders().set("loginPath",loginPath);
+//
+//                response.setStatusCode(HttpStatus.SEE_OTHER);
+//
+//                return exchange.getResponse().setComplete();
+//            }
+//
+//            Boolean flag = redisTemplate.opsForHash().hasKey("USERDATAAUTH" + jsonObject.get("id"), uri);
+//
+//            if(flag){
+//
+//                return chain.filter(exchange);
+//
+//            }else{
+//
+//                throw new RuntimeException("不能访问该资源！");
+//            }
+//        }
 
-        ServerHttpResponse response = exchange.getResponse();
-
-        //请求的绝对路径
-        String uri0=request.getURI().toString();
-
-        //请求的相对路径
-        String uri = request.getPath().value();
-
-        System.out.println("*******"+uri+"*******");
-
-        List<String> strings = Arrays.asList(urls);
-
-        if(strings.contains(uri0)){
-
-            return chain.filter(exchange);
-
-        }else{
-
-            List<String> tokens = request.getHeaders().get("token");
-
-            JSONObject jsonObject = null;
-
-            try {
-
-                jsonObject = JWTUtils.decodeJwtTocken(tokens.get(0));
-
-                String token = JWTUtils.generateToken(jsonObject.toJSONString());
-
-                response.getHeaders().set("token",token);
-
-            } catch (JwtException e) {
-
-                e.printStackTrace();
-
-                response.getHeaders().set("loginPath",loginPath);
-
-                response.setStatusCode(HttpStatus.SEE_OTHER);
-
-                return exchange.getResponse().setComplete();
-            }
-
-            Boolean flag = redisTemplate.opsForHash().hasKey("USERDATAAUTH" + jsonObject.get("id"), uri);
-
-            if(flag){
-
-                return chain.filter(exchange);
-
-            }else{
-
-                throw new RuntimeException("不能访问该资源！");
-            }
-        }
+        return chain.filter(exchange);
     }
-
-
-
 
 
 }

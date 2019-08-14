@@ -13,6 +13,7 @@
         <module>demo01_model</module>
         <module>demo01_manage</module>
         <module>demo01_util</module>
+        <module>demo01_swagger</module>
     </modules>
     <packaging>pom</packaging>
 

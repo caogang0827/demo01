@@ -9,13 +9,16 @@ import com.caogang.service.UserService;
 import com.caogang.utils.JWTUtils;
 import com.caogang.utils.MD5;
 import com.caogang.utils.UID;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import javafx.fxml.LoadException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Map;
@@ -30,6 +33,7 @@ import java.util.concurrent.TimeUnit;
  * @date: 2019/8/5 - 14:36
  */
 @Controller
+@Api(tags = "这是一个SSO权限认证中心接口")
 public class MainController {
 
     @Autowired
@@ -42,8 +46,9 @@ public class MainController {
      * 获取滑动验证的验证码
      * @return
      */
-    @RequestMapping("getCode")
+    @PostMapping("getCode")
     @ResponseBody
+    @ApiOperation("这是接口类MainController中的获取验证码方法")
     public ResponseResult getCode(HttpServletResponse response){
 
         //生成一个长度是5的随机字符串
@@ -78,7 +83,8 @@ public class MainController {
     }
 
     @ResponseBody
-    @RequestMapping("login")
+    @PostMapping("login")
+    @ApiOperation("这是接口类MainController中的登录认证方法")
     public ResponseResult login(@RequestBody Map<String, Object> map) throws LoadException, LoginException {
 
         ResponseResult responseResult = ResponseResult.getResponseResult();

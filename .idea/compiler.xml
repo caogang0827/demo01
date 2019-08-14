@@ -10,6 +10,7 @@
         <module name="demo01_manage" />
         <module name="demo01_model" />
         <module name="demo01_ssoServer" />
+        <module name="demo01_swagger" />
         <module name="demo01_util" />
       </profile>
     </annotationProcessing>
@@ -23,6 +24,7 @@
       <module name="demo01_manage" options="-parameters" />
       <module name="demo01_model" options="-parameters" />
       <module name="demo01_ssoServer" options="-parameters" />
+      <module name="demo01_swagger" options="-parameters" />
       <module name="demo01_util" options="-parameters" />
       <module name="demo01_utils" options="-parameters" />
     </option>

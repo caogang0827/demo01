@@ -5,6 +5,8 @@ import com.caogang.entity.RoleInfo;
 import com.caogang.entity.UserInfo;
 import com.caogang.service.UserServiceImpl;
 import com.caogang.utils.UID;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
@@ -21,12 +23,14 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/user")
+@Api(tags = "这是用户增、删、改、查接口")
 public class UserController {
 
     @Autowired
     private UserServiceImpl userServiceimpl;
 
-    @RequestMapping("/listUser")
+    @PostMapping("/listUser")
+    @ApiOperation("这是接口类UserController中的用户查询方法")
     private Page<UserInfo> listUser(@RequestBody QueryEntity queryEntity){
 
         Page<UserInfo> userInfos = null;
@@ -62,7 +66,8 @@ public class UserController {
 
     }
 
-    @RequestMapping("/deleteUser")
+    @PostMapping("/deleteUser")
+    @ApiOperation("这是接口类UserController中的删除用户方法")
     private Boolean deleteUser(String[] id){
 
         userServiceimpl.deleteUser(id);
@@ -74,6 +79,7 @@ public class UserController {
 
     @CrossOrigin
     @RequestMapping("/addPhoto")
+    @ApiOperation("这是接口类UserController中的上传用户头像方法")
     private void addPhoto(@RequestParam("file") MultipartFile multipartFile) {
 
         String filename = multipartFile.getOriginalFilename();
@@ -94,6 +100,7 @@ public class UserController {
 
     @CrossOrigin
     @RequestMapping("/addExcel")
+    @ApiOperation("这是接口类UserController中的使用Excel批量导入方法")
     private void addExcel(@RequestParam("file") MultipartFile multipartFile) {
 
         String filename = multipartFile.getOriginalFilename();
@@ -112,7 +119,8 @@ public class UserController {
 
     }
 
-    @RequestMapping("/addUser")
+    @PostMapping("/addUser")
+    @ApiOperation("这是接口类UserController中的添加用户方法")
     private Boolean addUser(@RequestBody UserInfo userInfo) {
 
         userInfo.setId(UID.getUUID16());
@@ -123,7 +131,8 @@ public class UserController {
 
     }
 
-    @RequestMapping("/updateUser")
+    @PostMapping("/updateUser")
+    @ApiOperation("这是接口类UserController中的修改用户方法")
     private Boolean updateUser(@RequestBody UserInfo userInfo) {
 
         userServiceimpl.updateUser(userInfo);
@@ -133,7 +142,8 @@ public class UserController {
     }
 
 
-    @RequestMapping("/uploadUser")
+    @PostMapping("/uploadUser")
+    @ApiOperation("这是接口类UserController中的批量导出用户成Excel表方法")
     private Boolean uploadUser(@RequestBody QueryEntity queryEntity, HttpServletResponse response){
 
         Page<UserInfo> userInfos = null;
