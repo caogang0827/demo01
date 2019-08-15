@@ -1,6 +1,7 @@
 package com.caogang.controller;
 
 import com.alibaba.fastjson.JSON;
+import com.caogang.entity.Chart;
 import com.caogang.entity.UserInfo;
 import com.caogang.exception.LoginException;
 import com.caogang.random.VerifyCodeUtils;
@@ -21,7 +22,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
-import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 
@@ -144,6 +146,40 @@ public class MainController {
                     responseResult.setCode(200);
                     responseResult.setSuccess("登陆成功！");
 
+
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy年MM月dd日");
+
+                    String format = sdf.format(new Date());
+
+                    redisTemplate.opsForHash().increment("number",format,1l);
+
+//                    Set<Object> number = redisTemplate.opsForHash().keys("number");
+//
+//                    for (Object o : number) {
+//                        System.out.println(o);
+//                    }
+
+                    String date = redisTemplate.opsForList().index("date", 0l);
+
+                    if(date==null){
+
+                        redisTemplate.opsForList().leftPush("date",format);
+
+                    }else {
+
+                        if(date.equals(format)){
+
+                            redisTemplate.opsForList().leftPop("date");
+
+                            redisTemplate.opsForList().leftPush("date",format);
+
+                        }else{
+
+                          redisTemplate.opsForList().leftPush("date", format);
+
+                        }
+                    }
+
                     return responseResult;
 
                 }else{
@@ -155,6 +191,39 @@ public class MainController {
         }else{
             throw new LoginException("用户名或密码错误");
         }
+
+    }
+
+
+    @ResponseBody
+    @PostMapping("chart")
+    @ApiOperation("这是接口类MainController中的统计登录人数方法")
+    private Chart chart(){
+
+        Chart chart = new Chart();
+
+        List<String> olddate = redisTemplate.opsForList().range("date", 0, -1);
+
+        if(olddate!=null){
+
+            List<Object> num = new ArrayList<>();
+
+            Collections.reverse(olddate);
+
+            chart.setHeng(olddate);
+
+            for (String date : olddate) {
+
+                Object number = redisTemplate.opsForHash().get("number", date);
+
+                num.add(number);
+
+            }
+
+            chart.setZong(num);
+        }
+
+        return chart;
 
     }
 

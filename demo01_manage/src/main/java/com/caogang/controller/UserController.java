@@ -12,7 +12,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -144,7 +143,7 @@ public class UserController {
 
     @PostMapping("/uploadUser")
     @ApiOperation("这是接口类UserController中的批量导出用户成Excel表方法")
-    private Boolean uploadUser(@RequestBody QueryEntity queryEntity, HttpServletResponse response){
+    private Boolean uploadUser(@RequestBody QueryEntity queryEntity){
 
         Page<UserInfo> userInfos = null;
 
