@@ -15,10 +15,9 @@ import io.swagger.annotations.ApiOperation;
 import javafx.fxml.LoadException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
@@ -34,7 +33,7 @@ import java.util.concurrent.TimeUnit;
  * @author: xiaogang
  * @date: 2019/8/5 - 14:36
  */
-@Controller
+@RestController
 @Api(tags = "这是一个SSO权限认证中心接口")
 public class MainController {
 
@@ -49,7 +48,6 @@ public class MainController {
      * @return
      */
     @PostMapping("getCode")
-    @ResponseBody
     @ApiOperation("这是接口类MainController中的获取验证码方法")
     public ResponseResult getCode(HttpServletResponse response){
 
@@ -84,7 +82,6 @@ public class MainController {
 
     }
 
-    @ResponseBody
     @PostMapping("login")
     @ApiOperation("这是接口类MainController中的登录认证方法")
     public ResponseResult login(@RequestBody Map<String, Object> map) throws LoadException, LoginException {
@@ -117,70 +114,7 @@ public class MainController {
 
                 if(userInfo.getPassword().equals(encryptPassword)){
 
-                    //将登陆的用户信息转存为JSON字符串
-                    String jsonString = JSON.toJSONString(userInfo);
-
-                    //用jwt将用户信息进行加密，加密用作token票据
-                    String generateToken = JWTUtils.generateToken(jsonString);
-
-                    //将加密信息存入返回实体
-                    responseResult.setToken(generateToken);
-
-                    //将登陆用户的token票据存入Redis中
-                    redisTemplate.opsForValue().set("USERINFO"+userInfo.getId(),generateToken);
-
-                    //将登陆用户的权限存入Redis中
-                    if(userInfo.getAuthormap() != null){
-
-                        redisTemplate.delete("USERDATAAUTH"+userInfo.getId());
-
-                        redisTemplate.opsForHash().putAll("USERDATAAUTH"+userInfo.getId(),userInfo.getAuthormap());
-
-                    }
-
-                    //设置token的过期时间
-                    redisTemplate.expire("USERINFO"+userInfo.getId(),3000,TimeUnit.SECONDS);
-
-                    //设置返回实体
-                    responseResult.setResult(userInfo);
-                    responseResult.setCode(200);
-                    responseResult.setSuccess("登陆成功！");
-
-
-                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy年MM月dd日");
-
-                    String format = sdf.format(new Date());
-
-                    redisTemplate.opsForHash().increment("number",format,1l);
-
-//                    Set<Object> number = redisTemplate.opsForHash().keys("number");
-//
-//                    for (Object o : number) {
-//                        System.out.println(o);
-//                    }
-
-                    String date = redisTemplate.opsForList().index("date", 0l);
-
-                    if(date==null){
-
-                        redisTemplate.opsForList().leftPush("date",format);
-
-                    }else {
-
-                        if(date.equals(format)){
-
-                            redisTemplate.opsForList().leftPop("date");
-
-                            redisTemplate.opsForList().leftPush("date",format);
-
-                        }else{
-
-                          redisTemplate.opsForList().leftPush("date", format);
-
-                        }
-                    }
-
-                    return responseResult;
+                    return this.together(userInfo);
 
                 }else{
                     throw new LoginException("用户名或密码错误");
@@ -195,24 +129,23 @@ public class MainController {
     }
 
 
-    @ResponseBody
     @PostMapping("chart")
     @ApiOperation("这是接口类MainController中的统计登录人数方法")
     private Chart chart(){
 
         Chart chart = new Chart();
 
-        List<String> olddate = redisTemplate.opsForList().range("date", 0, -1);
+        List<String> oldDate = redisTemplate.opsForList().range("date", 0, -1);
 
-        if(olddate!=null){
+        if(oldDate!=null){
 
             List<Object> num = new ArrayList<>();
 
-            Collections.reverse(olddate);
+            Collections.reverse(oldDate);
 
-            chart.setHeng(olddate);
+            chart.setHeng(oldDate);
 
-            for (String date : olddate) {
+            for (String date : oldDate) {
 
                 Object number = redisTemplate.opsForHash().get("number", date);
 
@@ -224,6 +157,121 @@ public class MainController {
         }
 
         return chart;
+
+    }
+
+    @PostMapping("sendTel")
+    @ApiOperation("这是接口类MainController中的接收前台手机号方法")
+    private Boolean sendTel(String tel){
+
+        Integer newNum = (int)((Math.random()*9+1)*100000);
+
+        redisTemplate.opsForValue().set(tel,newNum.toString());
+
+        redisTemplate.expire(tel,90,TimeUnit.SECONDS);
+
+        System.out.println(newNum);
+
+        return true;
+    }
+
+    @PostMapping("sendCode")
+    @ApiOperation("这是接口类MainController中的接收短信验证码方法")
+    private ResponseResult sendTelCode(String telCode,String tel){
+
+        ResponseResult result = new ResponseResult();
+
+        String checkCode = redisTemplate.opsForValue().get(tel);
+
+        if(telCode.equals(checkCode)){
+
+            UserInfo userInfo = userService.selectByTel(tel);
+
+            if(userInfo!=null){
+
+                return this.together(userInfo);
+
+            }else{
+
+                //没有此用户
+                result.setCode(404);
+
+                return result;
+            }
+
+        }else {
+
+            //验证码错误
+            result.setCode(500);
+
+            return result;
+
+        }
+
+    }
+
+    private ResponseResult together(UserInfo userInfo) {
+
+        ResponseResult result = new ResponseResult();
+
+        String jsonString = JSON.toJSONString(userInfo);
+
+        //用jwt将用户信息进行加密，加密用作token票据
+        String generateToken = JWTUtils.generateToken(jsonString);
+
+        //将加密信息存入返回实体
+        result.setToken(generateToken);
+
+        //将登陆用户的token票据存入Redis中
+        redisTemplate.opsForValue().set("USERINFO"+userInfo.getId(),generateToken);
+
+        //将登陆用户的权限存入Redis中
+        if(userInfo.getAuthormap() != null){
+
+            redisTemplate.delete("USERDATAAUTH"+userInfo.getId());
+
+            redisTemplate.opsForHash().putAll("USERDATAAUTH"+userInfo.getId(),userInfo.getAuthormap());
+
+        }
+
+        //设置token的过期时间
+        redisTemplate.expire("USERINFO"+userInfo.getId(),3000,TimeUnit.SECONDS);
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy年MM月dd日");
+
+        String format = sdf.format(new Date());
+
+        redisTemplate.opsForHash().increment("number",format,1L);
+
+        String date = redisTemplate.opsForList().index("date", 0L);
+
+        if(date==null){
+
+            redisTemplate.opsForList().leftPush("date",format);
+
+        }else {
+
+            if(date.equals(format)){
+
+                redisTemplate.opsForList().leftPop("date");
+
+                redisTemplate.opsForList().leftPush("date",format);
+
+            }else{
+
+                redisTemplate.opsForList().leftPush("date", format);
+
+            }
+        }
+
+        //设置返回实体
+        result.setResult(userInfo);
+
+        result.setCode(200);
+
+        result.setSuccess("登陆成功！");
+
+        return result;
 
     }
 

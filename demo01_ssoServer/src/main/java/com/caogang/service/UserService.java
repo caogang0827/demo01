@@ -37,22 +37,30 @@ public class UserService {
 
         if(userInfo!=null){
 
-            RoleInfo roleInfo = roleDao.selectRoleInfoByUserId(userInfo.getId());
+            return this.together(userInfo);
+        }
 
-            if(roleInfo!=null){
+        return null;
 
-                List<MenuInfo> menuInfoList = menuDao.selectMenuInfoByRoleId(roleInfo.getId());
+    }
 
-                Map<String,String> authMap=new Hashtable<>();
+    private UserInfo together(UserInfo userInfo) {
 
-                this.getChildrenMenuInfo(roleInfo.getId(),menuInfoList,authMap);
+        RoleInfo roleInfo = roleDao.selectRoleInfoByUserId(userInfo.getId());
 
-                userInfo.setAuthormap(authMap);
+        if(roleInfo!=null){
 
-                userInfo.setMenuInfoList(menuInfoList);
+            List<MenuInfo> menuInfoList = menuDao.selectMenuInfoByRoleId(roleInfo.getId());
 
-                //userInfo.setRoleInfoList(roleDao.findAll());
-            }
+            Map<String,String> authMap=new Hashtable<>();
+
+            this.getChildrenMenuInfo(roleInfo.getId(),menuInfoList,authMap);
+
+            userInfo.setAuthormap(authMap);
+
+            userInfo.setMenuInfoList(menuInfoList);
+
+            //userInfo.setRoleInfoList(roleDao.findAll());
         }
 
         return userInfo;
@@ -88,6 +96,15 @@ public class UserService {
     }
 
 
+    public UserInfo selectByTel(String tel) {
 
+        UserInfo userDaoByTel = userDao.findByTel(tel);
 
+        if(userDaoByTel!=null){
+
+            return this.together(userDaoByTel);
+        }
+
+        return null;
+    }
 }
