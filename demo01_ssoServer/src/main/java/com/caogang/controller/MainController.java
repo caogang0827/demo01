@@ -158,6 +158,12 @@ public class MainController {
 
         List<String> oldDate = redisTemplate.opsForList().range("date", 0, -1);
 
+        if(oldDate.size()>30){
+
+            //只保存30天数据
+            oldDate.remove(oldDate.size()-1);
+        }
+
         if(oldDate!=null){
 
             List<Object> num = new ArrayList<>();
@@ -184,15 +190,17 @@ public class MainController {
 
     @PostMapping("sendTel")
     @ApiOperation("这是接口类MainController中的接收前台手机号方法")
-    private Boolean sendTel(String tel){
+    private Boolean sendTel(@RequestBody Map<String , String> map){
 
         Integer newNum = (int)((Math.random()*9+1)*100000);
 
         ZhenziSmsClient client = new ZhenziSmsClient(apiUrl, appId, appSecret);
 
+        System.out.println(map.get("tel")+"<<<<<");
+
         try {
 
-            String send = client.send(tel, "您的验证码为:" + newNum + "，该码有效期为5分钟，该码只能使用一次!");
+            String send = client.send(map.get("tel"), "您的验证码为:" + newNum + "，该码有效期为5分钟，该码只能使用一次!");
 
             JSONObject jsonObject = JSONObject.parseObject(send);
 
@@ -202,9 +210,9 @@ public class MainController {
 
             }else{
 
-                redisTemplate.opsForValue().set(tel,newNum.toString());
+                redisTemplate.opsForValue().set(map.get("tel"),newNum.toString());
 
-                redisTemplate.expire(tel,300,TimeUnit.SECONDS);
+                redisTemplate.expire(map.get("tel"),300,TimeUnit.SECONDS);
 
                 System.out.println(newNum);
 
@@ -224,15 +232,15 @@ public class MainController {
 
     @PostMapping("sendCode")
     @ApiOperation("这是接口类MainController中的接收短信验证码方法")
-    private ResponseResult sendTelCode(String telCode,String tel){
+    private ResponseResult sendTelCode(@RequestBody Map<String , String> map){
 
         ResponseResult result = new ResponseResult();
 
-        String checkCode = redisTemplate.opsForValue().get(tel);
+        String checkCode = redisTemplate.opsForValue().get(map.get("tel"));
 
-        if(telCode.equals(checkCode)){
+        if(map.get("telCode").equals(checkCode)){
 
-            UserInfo userInfo = userService.selectByTel(tel);
+            UserInfo userInfo = userService.selectByTel(map.get("tel"));
 
             if(userInfo!=null){
 
@@ -259,11 +267,11 @@ public class MainController {
 
     @PostMapping("sendEmail")
     @ApiOperation("这是接口类MainController中的接收前台邮箱方法")
-    private ResponseResult sendEmail(String email){
+    private ResponseResult sendEmail(@RequestBody Map<String , String> map){
 
         ResponseResult result = new ResponseResult();
 
-        UserInfo userInfo = userService.selectUserByEmail(email);
+        UserInfo userInfo = userService.selectUserByEmail(map.get("email"));
 
         if(userInfo!=null){
 
@@ -277,7 +285,7 @@ public class MainController {
 
                 helper.setFrom(from);
 
-                helper.setTo(email);
+                helper.setTo(map.get("email"));
 
                 helper.setSubject("密码重置");
 
@@ -306,11 +314,11 @@ public class MainController {
 
     @PostMapping("sendEmailRestat")
     @ApiOperation("这是接口类MainController中的接收前台邮箱方法")
-    private ResponseResult sendEmailRestat(String userId,String password){
+    private ResponseResult sendEmailRestat(@RequestBody Map<String,String> map){
 
         ResponseResult result = new ResponseResult();
 
-        Integer integer = userService.updateUserPasswordById(password,userId);
+        Integer integer = userService.updateUserPasswordById(map.get("password"),map.get("userId"));
 
         if(integer > 0){
 
@@ -359,7 +367,17 @@ public class MainController {
 
         String format = sdf.format(new Date());
 
-        redisTemplate.opsForHash().increment("number",format,1L);
+        redisTemplate.opsForHash().increment("loginname",userInfo.getLoginname(),1L);
+
+        redisTemplate.expire("loginname",1,TimeUnit.DAYS);
+
+        int loginname = Integer.parseInt((String) redisTemplate.opsForHash().get("loginname", userInfo.getLoginname()));
+
+        if(loginname==1){
+
+            redisTemplate.opsForHash().increment("number",format,1L);
+
+        }
 
         String date = redisTemplate.opsForList().index("date", 0L);
 

@@ -1,11 +1,12 @@
 package com.caogang.service;
 
-import com.caogang.dao.MenuDao;
 import com.caogang.dao.RoleDao;
 import com.caogang.dao.RoleToMenuDao;
+import com.caogang.dao.UserDao;
 import com.caogang.dao.UserToRoleDao;
 import com.caogang.entity.RoleInfo;
 import com.caogang.entity.RoleToMenu;
+import com.caogang.entity.UserInfo;
 import com.caogang.entity.UserToRole;
 import com.caogang.utils.UID;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +31,7 @@ public class RoleServiceImpl {
     private RoleDao roleDao;
 
     @Autowired
-    private MenuDao menuDao;
+    private UserDao userDao;
 
     @Autowired
     private UserToRoleDao userToRoleDao;
@@ -42,13 +43,32 @@ public class RoleServiceImpl {
 
         Page<RoleInfo> roleInfos = roleDao.findAllByRolenameLike("%" + iname + "%", PageRequest.of(page, 3, Sort.by(Sort.Order.desc("createdtime"))));
 
-        roleInfos.getContent().forEach(roleInfo -> {
+        List<RoleInfo> content = roleInfos.getContent();
+
+        for (RoleInfo roleInfo : content) {
 
             roleInfo.setAuthKeys(roleToMenuDao.findAllKeysByRoleId(roleInfo.getId()));
 
-        });
+            roleInfo.setUsers(selectSomeUserByRoleId(roleInfo.getId()));
+
+        }
 
         return roleInfos;
+    }
+
+    public String selectSomeUserByRoleId(String roleInfoId){
+
+        String usersName = "";
+
+        List<UserInfo> userInfoList = userDao.selectSomeUserByRoleId(roleInfoId);
+
+        for (UserInfo userInfo : userInfoList) {
+
+            usersName+=userInfo.getUsername()+"、";
+
+        }
+
+        return usersName;
     }
 
     public void insertUserToRole(String userId, String roleId) {
@@ -121,7 +141,6 @@ public class RoleServiceImpl {
         }
     }
 
-
     public Integer selectUserByRoleId(String roleId) {
 
         return userToRoleDao.selectUserByRoleId(roleId);
@@ -135,4 +154,5 @@ public class RoleServiceImpl {
     public Page<RoleInfo> selectAll() {
         return roleDao.findAll(PageRequest.of(0,999));
     }
+
 }

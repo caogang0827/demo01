@@ -38,6 +38,8 @@ public class myGatewayFilter implements GlobalFilter {
 //        //请求的相对路径
 //        String uri = request.getPath().value();
 //
+//        System.out.println("*******"+uri0+"*******");
+//
 //        System.out.println("*******"+uri+"*******");
 //
 //        List<String> strings = Arrays.asList(urls);

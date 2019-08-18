@@ -5,6 +5,8 @@ import com.caogang.entity.RoleInfo;
 import com.caogang.entity.UserInfo;
 import com.caogang.service.UserServiceImpl;
 import com.caogang.utils.UID;
+import com.github.tobato.fastdfs.domain.ThumbImageConfig;
+import com.github.tobato.fastdfs.service.FastFileStorageClient;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +29,14 @@ public class UserController {
 
     @Autowired
     private UserServiceImpl userServiceimpl;
+
+
+    @Autowired
+    private ThumbImageConfig thumbImageConfig;
+
+    @Autowired
+    private FastFileStorageClient storageClient;
+
 
     @PostMapping("/listUser")
     @ApiOperation("这是接口类UserController中的用户查询方法")
@@ -79,7 +89,7 @@ public class UserController {
     @CrossOrigin
     @RequestMapping("/addPhoto")
     @ApiOperation("这是接口类UserController中的上传用户头像方法")
-    private void addPhoto(@RequestParam("file") MultipartFile multipartFile) {
+    private void addPhoto(@RequestParam("file") MultipartFile multipartFile) throws IOException {
 
         String filename = multipartFile.getOriginalFilename();
 
@@ -94,6 +104,20 @@ public class UserController {
             e.printStackTrace();
 
         }
+
+
+
+
+//        StorePath storePath = this.storageClient.uploadImageAndCrtThumbImage(multipartFile.getInputStream(), multipartFile.getSize(), "png", null);
+//
+//        System.out.println(storePath.getFullPath());
+//
+//        String path = thumbImageConfig.getThumbImagePath(storePath.getPath());
+//
+//        System.out.println(path.substring(0,path.lastIndexOf("_")));
+
+        //imageName=path.substring(0,path.lastIndexOf("_"));
+
 
     }
 

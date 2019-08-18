@@ -27,6 +27,10 @@ public class RoleInfo extends BaseAuditable {
     private String description;
 
     @Transient
+    @ApiModelProperty("这是角色下的用户")
+    private String users;
+
+    @Transient
     @ApiModelProperty("这是角色拥有的权限列表")
     private List<String> authKeys;
 
