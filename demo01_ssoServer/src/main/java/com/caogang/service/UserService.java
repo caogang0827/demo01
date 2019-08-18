@@ -6,6 +6,7 @@ import com.caogang.dao.UserDao;
 import com.caogang.entity.MenuInfo;
 import com.caogang.entity.RoleInfo;
 import com.caogang.entity.UserInfo;
+import com.caogang.utils.MD5;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -106,5 +107,13 @@ public class UserService {
         }
 
         return null;
+    }
+
+    public UserInfo selectUserByEmail(String email) {
+        return userDao.findByEmail(email);
+    }
+
+    public Integer updateUserPasswordById(String password, String userId) {
+        return userDao.updateUserPasswordById(MD5.encryptPassword(password,"lcg"),userId);
     }
 }

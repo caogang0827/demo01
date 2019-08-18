@@ -1,6 +1,7 @@
 package com.caogang.controller;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.caogang.entity.Chart;
 import com.caogang.entity.UserInfo;
 import com.caogang.exception.LoginException;
@@ -10,15 +11,20 @@ import com.caogang.service.UserService;
 import com.caogang.utils.JWTUtils;
 import com.caogang.utils.MD5;
 import com.caogang.utils.UID;
+import com.zhenzi.sms.ZhenziSmsClient;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import javafx.fxml.LoadException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.mail.internet.MimeMessage;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import java.text.SimpleDateFormat;
@@ -42,6 +48,20 @@ public class MainController {
 
     @Autowired
     private UserService userService;
+
+    @Value("${spring.mail.username}")
+    private String from;
+
+    @Autowired
+    private JavaMailSender mailSender;
+
+    //短信平台相关参数
+    //这个不用改
+    private String apiUrl = "https://sms_developer.zhenzikj.com";
+    //榛子云系统上获取
+    private String appId = "102375";
+    private String appSecret = "f2b5b622-3317-403a-b240-9a87a5c1f987";
+
 
     /**
      * 获取滑动验证的验证码
@@ -81,6 +101,7 @@ public class MainController {
         return responseResult;
 
     }
+
 
     @PostMapping("login")
     @ApiOperation("这是接口类MainController中的登录认证方法")
@@ -160,20 +181,46 @@ public class MainController {
 
     }
 
+
     @PostMapping("sendTel")
     @ApiOperation("这是接口类MainController中的接收前台手机号方法")
     private Boolean sendTel(String tel){
 
         Integer newNum = (int)((Math.random()*9+1)*100000);
 
-        redisTemplate.opsForValue().set(tel,newNum.toString());
+        ZhenziSmsClient client = new ZhenziSmsClient(apiUrl, appId, appSecret);
 
-        redisTemplate.expire(tel,90,TimeUnit.SECONDS);
+        try {
 
-        System.out.println(newNum);
+            String send = client.send(tel, "您的验证码为:" + newNum + "，该码有效期为5分钟，该码只能使用一次!");
 
-        return true;
+            JSONObject jsonObject = JSONObject.parseObject(send);
+
+            if (jsonObject.getIntValue("code")!=0){//发送短信失败
+
+                return false;
+
+            }else{
+
+                redisTemplate.opsForValue().set(tel,newNum.toString());
+
+                redisTemplate.expire(tel,300,TimeUnit.SECONDS);
+
+                System.out.println(newNum);
+
+                return true;
+
+            }
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            return null;
+        }
+
     }
+
 
     @PostMapping("sendCode")
     @ApiOperation("这是接口类MainController中的接收短信验证码方法")
@@ -209,6 +256,77 @@ public class MainController {
         }
 
     }
+
+    @PostMapping("sendEmail")
+    @ApiOperation("这是接口类MainController中的接收前台邮箱方法")
+    private ResponseResult sendEmail(String email){
+
+        ResponseResult result = new ResponseResult();
+
+        UserInfo userInfo = userService.selectUserByEmail(email);
+
+        if(userInfo!=null){
+
+            //发送邮件
+            MimeMessage message=mailSender.createMimeMessage();
+
+            try {
+
+                //true表示需要创建一个multipart message
+                MimeMessageHelper helper=new MimeMessageHelper(message,true);
+
+                helper.setFrom(from);
+
+                helper.setTo(email);
+
+                helper.setSubject("密码重置");
+
+                helper.setText("<html><head></head><body><h1>重置地址：</h1><br><a href='https://127.0.0.1:8080/view/found/foundPasswordSuccess'/>https://localhost:8080/view/found/foundPasswordSuccess</body></html>",true);
+
+                mailSender.send(message);
+
+                result.setCode(200);
+
+                result.setResult(userInfo);
+
+            }catch (Exception e){
+
+                result.setCode(500);
+
+            }
+
+        }else{
+
+            result.setCode(404);
+        }
+
+        return result;
+    }
+
+
+    @PostMapping("sendEmailRestat")
+    @ApiOperation("这是接口类MainController中的接收前台邮箱方法")
+    private ResponseResult sendEmailRestat(String userId,String password){
+
+        ResponseResult result = new ResponseResult();
+
+        Integer integer = userService.updateUserPasswordById(password,userId);
+
+        if(integer > 0){
+
+            //发送邮件
+
+            result.setCode(200);
+
+
+        }else{
+
+            result.setCode(404);
+        }
+
+        return result;
+    }
+
 
     private ResponseResult together(UserInfo userInfo) {
 

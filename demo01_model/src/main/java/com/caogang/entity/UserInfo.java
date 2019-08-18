@@ -41,6 +41,9 @@ public class UserInfo extends BaseAuditable {
     @ApiModelProperty("这是用户的头像名称")
     private String url;
 
+    @ApiModelProperty("这是用户的邮箱")
+    private String email;
+
     @Transient
     @ApiModelProperty("这是用户的权限列表")
     private List<MenuInfo> menuInfoList;
