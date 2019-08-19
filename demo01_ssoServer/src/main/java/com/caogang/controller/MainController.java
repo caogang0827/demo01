@@ -369,16 +369,6 @@ public class MainController {
 
         redisTemplate.opsForHash().increment("loginname",userInfo.getLoginname(),1L);
 
-        redisTemplate.expire("loginname",1,TimeUnit.DAYS);
-
-        int loginname = Integer.parseInt((String) redisTemplate.opsForHash().get("loginname", userInfo.getLoginname()));
-
-        if(loginname==1){
-
-            redisTemplate.opsForHash().increment("number",format,1L);
-
-        }
-
         String date = redisTemplate.opsForList().index("date", 0L);
 
         if(date==null){
@@ -397,7 +387,19 @@ public class MainController {
 
                 redisTemplate.opsForList().leftPush("date", format);
 
+                redisTemplate.delete("loginname");
+
+                redisTemplate.opsForHash().increment("loginname",userInfo.getLoginname(),1L);
+
             }
+        }
+
+        int loginname = Integer.parseInt((String) redisTemplate.opsForHash().get("loginname", userInfo.getLoginname()));
+
+        if(loginname==1){
+
+            redisTemplate.opsForHash().increment("number",format,1L);
+
         }
 
         //设置返回实体
