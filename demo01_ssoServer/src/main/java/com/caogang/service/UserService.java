@@ -61,6 +61,8 @@ public class UserService {
 
             userInfo.setMenuInfoList(menuInfoList);
 
+            userInfo.setRoleInfo(roleDao.selectRoleInfoByUserId(userInfo.getId()));
+
             //userInfo.setRoleInfoList(roleDao.findAll());
         }
 
