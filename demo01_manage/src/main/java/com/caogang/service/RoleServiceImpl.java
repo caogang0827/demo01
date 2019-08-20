@@ -155,4 +155,7 @@ public class RoleServiceImpl {
         return roleDao.findAll(PageRequest.of(0,999));
     }
 
+    public Integer deleteUserToRole(String userId) {
+        return userToRoleDao.deleteByUserId(userId);
+    }
 }

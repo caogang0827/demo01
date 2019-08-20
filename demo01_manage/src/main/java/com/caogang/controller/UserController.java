@@ -107,7 +107,6 @@ public class UserController {
 
 
 
-
 //        StorePath storePath = this.storageClient.uploadImageAndCrtThumbImage(multipartFile.getInputStream(), multipartFile.getSize(), "png", null);
 //
 //        System.out.println(storePath.getFullPath());

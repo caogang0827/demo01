@@ -51,6 +51,15 @@ public class RoleController {
         return true;
     }
 
+    @PostMapping("/notbindRole")
+    @ApiOperation("这是接口类RoleController中的用户解绑角色方法")
+    private Boolean notbindRole(String userId) {
+
+        roleServiceImpl.deleteUserToRole(userId);
+
+        return true;
+    }
+
     @PostMapping("/addRole")
     @ApiOperation("这是接口类RoleController中的添加角色方法")
     private Boolean addRole(@RequestBody RoleInfo roleInfo) {
